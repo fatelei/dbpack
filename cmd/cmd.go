@@ -166,13 +166,21 @@ var (
 			}()
 
 			dbpack.Start(ctx)
+
+			// init metrics for prometheus server scrape.
+			defaultExporterPort := 18888
+			var lis net.Listener
+			var lisErr error
 			if conf.ExporterPort != nil {
-				lis, err := net.Listen("tcp4", fmt.Sprintf(":%d", *conf.ExporterPort))
-				if err != nil {
-					panic(err)
-				}
-				go initMetrics(ctx, lis)
+				lis, lisErr = net.Listen("tcp4", fmt.Sprintf(":%d", *conf.ExporterPort))
+			} else {
+				lis, lisErr = net.Listen("tcp4", fmt.Sprintf(":%d", defaultExporterPort))
 			}
+
+			if lisErr != nil {
+				panic(lisErr)
+			}
+			go initMetrics(ctx, lis)
 		},
 	}
 )
